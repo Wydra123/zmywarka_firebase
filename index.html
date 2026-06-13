@@ -178,6 +178,15 @@
     }
     .log-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
     .log-meta { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+    .log-item-content { flex: 1; }
+    .btn-delete-action {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1rem; padding: 2px 4px;
+      border-radius: 6px; line-height: 1; flex-shrink: 0;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-delete-action:hover { color: #f87171; background: rgba(248,113,113,0.1); }
 
     footer { margin-top: 8px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
 
@@ -397,16 +406,24 @@
       } else {
         const ul = document.createElement('ul');
         ul.className = 'log-list';
-        [...log].reverse().forEach(entry => {
+        const isToday = date === today;
+        const lastIdx = log.length - 1;
+        [...log].reverse().forEach((entry, revIdx) => {
+          const originalIdx = lastIdx - revIdx;
           const li = document.createElement('li');
           li.className = 'log-item';
           const dot = STATES[entry.toState]?.dot ?? '#ccc';
+          const canDelete = isToday && originalIdx === lastIdx && entry.person === currentUser;
           li.innerHTML = `
             <span class="log-dot" style="background:${dot}"></span>
-            <div>
+            <div class="log-item-content">
               <div><strong>${entry.person || 'Anonim'}</strong> — ${entry.verb}</div>
               <div class="log-meta">${entry.time}</div>
-            </div>`;
+            </div>
+            ${canDelete ? `<button type="button" class="btn-delete-action" title="Cofnij tę akcję">🗑️</button>` : ''}`;
+          if (canDelete) {
+            li.querySelector('.btn-delete-action').addEventListener('click', deleteLastAction);
+          }
           ul.appendChild(li);
         });
         section.appendChild(ul);
@@ -430,6 +447,35 @@
     el.className = `toast ${type} show`;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── DELETE LAST ACTION ───────────────────────────────────────────────────────
+  function deleteLastAction() {
+    const today = todayKey();
+    const log = (allDays[today]?.log || []).filter(Boolean);
+    if (!log.length || log[log.length - 1].person !== currentUser) return;
+
+    const newLog = log.slice(0, -1);
+    const prevEntry = newLog.length ? newLog[newLog.length - 1] : null;
+
+    let newStatus;
+    if (prevEntry) {
+      newStatus = prevEntry.toState;
+    } else {
+      const prevDays = Object.keys(allDays).filter(d => d !== today).sort().reverse();
+      newStatus = prevDays.length && allDays[prevDays[0]]?.status
+        ? allDays[prevDays[0]].status : 'empty';
+    }
+
+    const newDay = { status: newStatus, log: newLog };
+    allDays = { ...allDays, [today]: newDay };
+    render();
+
+    if (db) {
+      db.ref(`zmywarka/days/${today}`).set(newDay)
+        .then(() => showToast('✓ Akcja cofnięta', 'success'))
+        .catch(() => showToast('✗ Błąd zapisu!', 'error'));
+    }
   }
 
   // ── ACTION ───────────────────────────────────────────────────────────────────
