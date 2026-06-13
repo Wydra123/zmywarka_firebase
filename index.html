@@ -17,7 +17,6 @@
       --shadow:    0 4px 24px rgba(0,0,0,0.4);
       --radius:    16px;
       --font:      'Segoe UI', system-ui, sans-serif;
-
       --dirty-bg:   #3a2a00; --dirty-text:   #fcd34d;
       --running-bg: #002233; --running-text: #67e8f9;
       --clean-bg:   #022c1a; --clean-text:   #4ade80;
@@ -35,21 +34,82 @@
       color: var(--text);
     }
 
-    .setup-banner {
-      background: #2a1f00;
-      border: 1.5px solid #92400e;
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      width: 100%; max-width: 480px;
-      margin-bottom: 20px;
+    /* ---- LOGIN SCREEN ---- */
+    #login-screen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 24px;
     }
-    .setup-banner h3 { color: #fcd34d; font-size: 1rem; margin-bottom: 10px; }
-    .setup-banner ol { color: #fbbf24; font-size: 0.85rem; line-height: 1.9; padding-left: 20px; }
-    .setup-banner code { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 1px 5px; font-size: 0.8rem; }
+    .login-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%; max-width: 400px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .login-card .login-emoji { font-size: 3.5rem; display: block; margin-bottom: 16px; }
+    .login-card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+    .login-card p  { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+    .login-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 1.05rem;
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border 0.2s;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .login-input::placeholder { color: var(--text-muted); }
+    .login-input:focus { border-color: #667eea; }
+    .btn-login {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      font-family: var(--font);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .btn-login:active { opacity: 0.85; }
 
-    header { text-align: center; margin-bottom: 28px; }
+    /* ---- MAIN APP ---- */
+    #app { display: none; width: 100%; flex-direction: column; align-items: center; }
+    #app.visible { display: flex; }
+
+    header { text-align: center; margin-bottom: 28px; width: 100%; max-width: 480px; }
     header h1 { font-size: 2rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
     header p.date { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+
+    .user-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .user-badge strong { color: var(--text); }
+    .user-badge button {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 0.78rem; padding: 0;
+      font-family: var(--font);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .user-badge button:hover { color: var(--text); }
 
     .conn-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
     .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #4a5568; transition: background 0.3s; }
@@ -78,17 +138,6 @@
     .state-clean   { background: var(--clean-bg);    color: var(--clean-text);   }
     .state-empty   { background: var(--empty-bg);    color: var(--empty-text);   }
 
-    .duty-row { display: flex; gap: 10px; align-items: center; }
-    .duty-row label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-    .duty-row input {
-      flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
-      padding: 9px 14px; font-size: 0.95rem; font-family: var(--font);
-      outline: none; transition: border 0.2s;
-      background: var(--surface); color: var(--text);
-    }
-    .duty-row input::placeholder { color: var(--text-muted); }
-    .duty-row input:focus { border-color: #667eea; background: #1e2235; }
-
     .actions { display: flex; flex-direction: column; gap: 12px; }
     .btn {
       width: 100%; padding: 14px 20px; border: none; border-radius: 12px;
@@ -110,10 +159,8 @@
       font-size: 1rem; font-weight: 700; color: var(--text-muted);
       margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em;
     }
-
     .day-section { margin-bottom: 18px; }
     .day-section:last-child { margin-bottom: 0; }
-
     .day-header {
       display: flex; align-items: center; justify-content: space-between;
       font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
@@ -122,7 +169,6 @@
       padding-bottom: 6px; margin-bottom: 10px;
     }
     .day-status-badge { font-size: 1.1rem; }
-
     .log-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 8px 0; }
     .log-list  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .log-item  {
@@ -151,48 +197,48 @@
 </head>
 <body>
 
-<div class="setup-banner" id="setup-banner" style="display:none">
-  <h3>⚙️ Wymagana konfiguracja Firebase</h3>
-  <ol>
-    <li>Wejdź na <strong>console.firebase.google.com</strong> i utwórz projekt</li>
-    <li>Dodaj aplikację webową (<strong>&lt;/&gt;</strong>) i skopiuj config</li>
-    <li>Utwórz <strong>Realtime Database</strong> w lewym menu</li>
-    <li>W <strong>Reguły</strong> wklej: <code>{"rules":{".read":true,".write":true}}</code></li>
-    <li>Wklej config do pliku HTML (sekcja FIREBASE CONFIG)</li>
-  </ol>
-</div>
-
-<header>
-  <h1>🫧 Zmywarka Biurowa</h1>
-  <p class="date" id="today-label"></p>
-  <div class="conn-badge" id="conn-badge" style="display:none">
-    <span class="conn-dot" id="conn-dot"></span>
-    <span id="conn-text">Łączenie…</span>
-  </div>
-</header>
-
-<div class="card status-card" id="status-card">
-  <span class="status-icon" id="status-icon"></span>
-  <div class="status-label"      id="status-label"></div>
-  <div class="status-description" id="status-desc"></div>
-  <div class="last-update"        id="last-update"></div>
-</div>
-
-<div class="card">
-  <div class="duty-row">
-    <label for="duty-input">Dyżurny/a:</label>
-    <input id="duty-input" type="text" placeholder="Twoje imię…" maxlength="40" />
+<!-- EKRAN LOGOWANIA -->
+<div id="login-screen">
+  <div class="login-card">
+    <span class="login-emoji">🫧</span>
+    <h2>Zmywarka Biurowa</h2>
+    <p>Jak masz na imię? Zapamiętamy to na tym urządzeniu.</p>
+    <input id="login-input" class="login-input" type="text" placeholder="Twoje imię…" maxlength="40" autocomplete="name" />
+    <button type="button" class="btn-login" id="login-btn">Wchodzę</button>
   </div>
 </div>
 
-<div class="card actions" id="actions-card"></div>
+<!-- GŁÓWNA APLIKACJA -->
+<div id="app">
+  <header>
+    <h1>🫧 Zmywarka Biurowa</h1>
+    <p class="date" id="today-label"></p>
+    <div class="user-badge">
+      Cześć, <strong id="user-name-display"></strong>
+      <button type="button" id="change-name-btn">zmień</button>
+    </div>
+    <div class="conn-badge" id="conn-badge" style="display:none">
+      <span class="conn-dot" id="conn-dot"></span>
+      <span id="conn-text">Łączenie…</span>
+    </div>
+  </header>
 
-<div class="card log-card">
-  <h2>Historia — ostatnie 7 dni</h2>
-  <div id="history-container"></div>
+  <div class="card status-card" id="status-card">
+    <span class="status-icon" id="status-icon"></span>
+    <div class="status-label"       id="status-label"></div>
+    <div class="status-description" id="status-desc"></div>
+    <div class="last-update"        id="last-update"></div>
+  </div>
+
+  <div class="card actions" id="actions-card"></div>
+
+  <div class="card log-card">
+    <h2>Historia — ostatnie 7 dni</h2>
+    <div id="history-container"></div>
+  </div>
+
+  <footer>Dane synchronizowane przez Firebase · zmywarka-900c0</footer>
 </div>
-
-<footer>Dane synchronizowane przez Firebase · zmywarka-900c0</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -210,10 +256,10 @@
   // ────────────────────────────────────────────────────────────────────────────
 
   const STATES = {
-    empty:   { icon:'🍽️', label:'Pusta / w trakcie napełniania',        desc:'Zmywarka jest pusta lub właśnie się zapełnia.',                               cls:'state-empty',   dot:'#6c757d' },
-    dirty:   { icon:'🫙',  label:'Pełna – brudna',                        desc:'Zmywarka jest pełna brudnych naczyń. Dyżurny/a powinien/na ją włączyć!',      cls:'state-dirty',   dot:'#f0a500' },
-    running: { icon:'💦',  label:'Pracuje…',                              desc:'Zmywarka jest włączona i myje naczynia.',                                     cls:'state-running', dot:'#0dcaf0' },
-    clean:   { icon:'✅',  label:'Czysta!',                               desc:'Naczynia są umyte i czyste. Dyżurny/a powinien/na je wypakować.',             cls:'state-clean',   dot:'#198754' },
+    empty:   { icon:'🍽️', label:'Pusta / w trakcie napełniania', desc:'Zmywarka jest pusta lub właśnie się zapełnia.',                          cls:'state-empty',   dot:'#6c757d' },
+    dirty:   { icon:'🫙',  label:'Pełna – brudna',                desc:'Zmywarka jest pełna brudnych naczyń. Dyżurny/a powinien/na ją włączyć!', cls:'state-dirty',   dot:'#f0a500' },
+    running: { icon:'💦',  label:'Pracuje…',                      desc:'Zmywarka jest włączona i myje naczynia.',                                cls:'state-running', dot:'#0dcaf0' },
+    clean:   { icon:'✅',  label:'Czysta!',                       desc:'Naczynia są umyte i czyste. Dyżurny/a powinien/na je wypakować.',        cls:'state-clean',   dot:'#198754' },
   };
 
   const ACTIONS = {
@@ -237,10 +283,46 @@
     return d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
+  // ── USER / LOGIN ─────────────────────────────────────────────────────────────
+  let currentUser = localStorage.getItem('zmywarka_user') || '';
+
+  function showLogin() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').classList.remove('visible');
+    setTimeout(() => document.getElementById('login-input').focus(), 100);
+  }
+
+  function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('user-name-display').textContent = currentUser;
+  }
+
+  function saveUser(name) {
+    currentUser = name.trim();
+    localStorage.setItem('zmywarka_user', currentUser);
+    showApp();
+  }
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const val = document.getElementById('login-input').value.trim();
+    if (val) saveUser(val);
+  });
+  document.getElementById('login-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const val = document.getElementById('login-input').value.trim();
+      if (val) saveUser(val);
+    }
+  });
+  document.getElementById('change-name-btn').addEventListener('click', () => {
+    document.getElementById('login-input').value = currentUser;
+    showLogin();
+  });
+
   // ── STATE ────────────────────────────────────────────────────────────────────
   const CONFIG_READY = !firebaseConfig.apiKey.startsWith('WKLEJ');
   let db = null;
-  let allDays = {};  // { 'YYYY-MM-DD': { status, log: [...] } }
+  let allDays = {};
 
   function getCurrentStatus() {
     const sorted = Object.keys(allDays).sort().reverse();
@@ -352,12 +434,11 @@
 
   // ── ACTION ───────────────────────────────────────────────────────────────────
   function handleAction(action) {
-    const person = document.getElementById('duty-input').value.trim();
-    const now    = new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-    const today  = todayKey();
+    const now   = new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    const today = todayKey();
 
     const prevLog = (allDays[today]?.log || []).filter(Boolean);
-    const newLog  = [...prevLog, { verb: action.verb, person, toState: action.nextState, time: now }];
+    const newLog  = [...prevLog, { verb: action.verb, person: currentUser, toState: action.nextState, time: now }];
     const newDay  = { status: action.nextState, log: newLog };
 
     allDays = { ...allDays, [today]: newDay };
@@ -365,19 +446,25 @@
 
     if (db) {
       db.ref(`zmywarka/days/${today}`).set(newDay)
-        .then(() => showToast('✓ Zapisano w bazie', 'success'))
+        .then(() => showToast('✓ Zapisano', 'success'))
         .catch(() => showToast('✗ Błąd zapisu! Sprawdź reguły Firebase.', 'error'));
     }
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────────
-  render(); // natychmiastowy render, zanim Firebase odpowie
+  document.getElementById('today-label').textContent =
+    new Date().toLocaleDateString('pl-PL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  if (currentUser) {
+    showApp();
+    render();
+  } else {
+    showLogin();
+  }
 
   if (!CONFIG_READY) {
-    document.getElementById('setup-banner').style.display = 'block';
-  } else if (typeof firebase === 'undefined') {
-    showToast('✗ Nie załadowano Firebase SDK — sprawdź połączenie', 'error');
-  } else {
+    // brak konfiguracji — app działa offline
+  } else if (typeof firebase !== 'undefined') {
     try { firebase.initializeApp(firebaseConfig); } catch(e) {}
     db = firebase.database();
 
@@ -397,16 +484,6 @@
         render();
       });
   }
-
-  // ── DUTY NAME (lokalne per urządzenie) ───────────────────────────────────────
-  const dutyInput = document.getElementById('duty-input');
-  dutyInput.value = localStorage.getItem('zmywarka_duty_name') || '';
-  dutyInput.addEventListener('input', () => {
-    localStorage.setItem('zmywarka_duty_name', dutyInput.value.trim());
-  });
-
-  document.getElementById('today-label').textContent =
-    new Date().toLocaleDateString('pl-PL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 </script>
 </body>
 </html>
