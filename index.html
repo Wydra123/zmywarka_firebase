@@ -95,6 +95,11 @@
       font-size: 1rem; font-weight: 600; cursor: pointer; font-family: var(--font);
       transition: opacity 0.15s, transform 0.1s;
       display: flex; align-items: center; justify-content: center; gap: 10px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+      user-select: none;
     }
     .btn:active { transform: scale(0.97); }
     .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
@@ -267,9 +272,11 @@
     actionsEl.innerHTML = '';
     (ACTIONS[status] || []).forEach(action => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = `btn ${action.cls}`;
       btn.innerHTML = `<span>${action.icon}</span><span>${action.label}</span>`;
       btn.addEventListener('click', () => handleAction(action));
+      btn.addEventListener('touchend', e => { e.preventDefault(); handleAction(action); });
       actionsEl.appendChild(btn);
     });
 
@@ -368,8 +375,10 @@
 
   if (!CONFIG_READY) {
     document.getElementById('setup-banner').style.display = 'block';
+  } else if (typeof firebase === 'undefined') {
+    showToast('✗ Nie załadowano Firebase SDK — sprawdź połączenie', 'error');
   } else {
-    firebase.initializeApp(firebaseConfig);
+    try { firebase.initializeApp(firebaseConfig); } catch(e) {}
     db = firebase.database();
 
     document.getElementById('conn-badge').style.display = 'inline-flex';
