@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zmywarka Biurowa</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --card:      #21253a;
+      --border:    #2e3250;
+      --text:      #e2e8f0;
+      --text-muted:#7c85a2;
+      --shadow:    0 4px 24px rgba(0,0,0,0.4);
+      --radius:    16px;
+      --font:      'Segoe UI', system-ui, sans-serif;
+
+      --dirty-bg:   #3a2a00; --dirty-text:   #fcd34d;
+      --running-bg: #002233; --running-text: #67e8f9;
+      --clean-bg:   #022c1a; --clean-text:   #4ade80;
+      --empty-bg:   #1e2030; --empty-text:   #94a3b8;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      color: var(--text);
+    }
+
+    .setup-banner {
+      background: #2a1f00;
+      border: 1.5px solid #92400e;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      width: 100%; max-width: 480px;
+      margin-bottom: 20px;
+    }
+    .setup-banner h3 { color: #fcd34d; font-size: 1rem; margin-bottom: 10px; }
+    .setup-banner ol { color: #fbbf24; font-size: 0.85rem; line-height: 1.9; padding-left: 20px; }
+    .setup-banner code { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 1px 5px; font-size: 0.8rem; }
+
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 { font-size: 2rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+    header p.date { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+
+    .conn-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+    .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #4a5568; transition: background 0.3s; }
+    .conn-dot.online  { background: #48bb78; }
+    .conn-dot.offline { background: #fc8181; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%; max-width: 480px;
+      padding: 28px 24px;
+      margin-bottom: 20px;
+    }
+
+    .status-card { text-align: center; transition: background 0.3s; }
+    .status-icon { font-size: 5rem; line-height: 1; margin-bottom: 12px; display: block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+    .status-label { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .status-description { font-size: 0.95rem; opacity: 0.75; line-height: 1.5; }
+    .last-update { font-size: 0.78rem; opacity: 0.6; margin-top: 10px; }
+
+    .state-dirty   { background: var(--dirty-bg);   color: var(--dirty-text);   }
+    .state-running { background: var(--running-bg);  color: var(--running-text); }
+    .state-clean   { background: var(--clean-bg);    color: var(--clean-text);   }
+    .state-empty   { background: var(--empty-bg);    color: var(--empty-text);   }
+
+    .duty-row { display: flex; gap: 10px; align-items: center; }
+    .duty-row label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .duty-row input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 9px 14px; font-size: 0.95rem; font-family: var(--font);
+      outline: none; transition: border 0.2s;
+      background: var(--surface); color: var(--text);
+    }
+    .duty-row input::placeholder { color: var(--text-muted); }
+    .duty-row input:focus { border-color: #667eea; background: #1e2235; }
+
+    .actions { display: flex; flex-direction: column; gap: 12px; }
+    .btn {
+      width: 100%; padding: 14px 20px; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; font-family: var(--font);
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+    .btn-success { background: linear-gradient(135deg,#11998e,#38ef7d); color:#fff; }
+    .btn-warning { background: linear-gradient(135deg,#f7971e,#ffd200); color:#2d2d2d; }
+
+    .log-card h2 {
+      font-size: 1rem; font-weight: 700; color: var(--text-muted);
+      margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    .day-section { margin-bottom: 18px; }
+    .day-section:last-child { margin-bottom: 0; }
+
+    .day-header {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.82rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px; margin-bottom: 10px;
+    }
+    .day-status-badge { font-size: 1.1rem; }
+
+    .log-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 8px 0; }
+    .log-list  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .log-item  {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 9px 12px; border-radius: 10px;
+      background: var(--surface); font-size: 0.88rem; color: var(--text);
+    }
+    .log-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .log-meta { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+
+    footer { margin-top: 8px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+
+    /* ---- TOAST ---- */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 22px; border-radius: 12px;
+      font-size: 0.9rem; font-weight: 600; font-family: var(--font);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      opacity: 0; transition: opacity 0.25s;
+      pointer-events: none; z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #14532d; color: #4ade80; border: 1px solid #166534; }
+    .toast.error   { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  </style>
+</head>
+<body>
+
+<div class="setup-banner" id="setup-banner" style="display:none">
+  <h3>⚙️ Wymagana konfiguracja Firebase</h3>
+  <ol>
+    <li>Wejdź na <strong>console.firebase.google.com</strong> i utwórz projekt</li>
+    <li>Dodaj aplikację webową (<strong>&lt;/&gt;</strong>) i skopiuj config</li>
+    <li>Utwórz <strong>Realtime Database</strong> w lewym menu</li>
+    <li>W <strong>Reguły</strong> wklej: <code>{"rules":{".read":true,".write":true}}</code></li>
+    <li>Wklej config do pliku HTML (sekcja FIREBASE CONFIG)</li>
+  </ol>
+</div>
+
+<header>
+  <h1>🫧 Zmywarka Biurowa</h1>
+  <p class="date" id="today-label"></p>
+  <div class="conn-badge" id="conn-badge" style="display:none">
+    <span class="conn-dot" id="conn-dot"></span>
+    <span id="conn-text">Łączenie…</span>
+  </div>
+</header>
+
+<div class="card status-card" id="status-card">
+  <span class="status-icon" id="status-icon"></span>
+  <div class="status-label"      id="status-label"></div>
+  <div class="status-description" id="status-desc"></div>
+  <div class="last-update"        id="last-update"></div>
+</div>
+
+<div class="card">
+  <div class="duty-row">
+    <label for="duty-input">Dyżurny/a:</label>
+    <input id="duty-input" type="text" placeholder="Twoje imię…" maxlength="40" />
+  </div>
+</div>
+
+<div class="card actions" id="actions-card"></div>
+
+<div class="card log-card">
+  <h2>Historia — ostatnie 7 dni</h2>
+  <div id="history-container"></div>
+</div>
+
+<footer>Dane synchronizowane przez Firebase · zmywarka-900c0</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  // ── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAr_HS6Z_mrUI28mxym9JncpOnk7l0KzVA",
+    authDomain:        "zmywarka-900c0.firebaseapp.com",
+    databaseURL:       "https://zmywarka-900c0-default-rtdb.firebaseio.com",
+    projectId:         "zmywarka-900c0",
+    storageBucket:     "zmywarka-900c0.firebasestorage.app",
+    messagingSenderId: "838902957689",
+    appId:             "1:838902957689:web:915222590c99a4d370b6a8",
+  };
+  // ────────────────────────────────────────────────────────────────────────────
+
+  const STATES = {
+    empty:   { icon:'🍽️', label:'Pusta / w trakcie napełniania',        desc:'Zmywarka jest pusta lub właśnie się zapełnia.',                               cls:'state-empty',   dot:'#6c757d' },
+    dirty:   { icon:'🫙',  label:'Pełna – brudna',                        desc:'Zmywarka jest pełna brudnych naczyń. Dyżurny/a powinien/na ją włączyć!',      cls:'state-dirty',   dot:'#f0a500' },
+    running: { icon:'💦',  label:'Pracuje…',                              desc:'Zmywarka jest włączona i myje naczynia.',                                     cls:'state-running', dot:'#0dcaf0' },
+    clean:   { icon:'✅',  label:'Czysta!',                               desc:'Naczynia są umyte i czyste. Dyżurny/a powinien/na je wypakować.',             cls:'state-clean',   dot:'#198754' },
+  };
+
+  const ACTIONS = {
+    empty:   [{ label:'Zmywarka jest pełna (brudna)', icon:'🫙',  cls:'btn-warning', nextState:'dirty',   verb:'Oznaczył(a) zmywarkę jako pełną (brudną)' }],
+    dirty:   [{ label:'Włączam zmywarkę',              icon:'▶️',  cls:'btn-primary', nextState:'running', verb:'Włączył(a) zmywarkę' }],
+    running: [{ label:'Zmywarka skończyła – wyłączam', icon:'⏹️', cls:'btn-success', nextState:'clean',   verb:'Wyłączył(a) zmywarkę (naczynia czyste)' }],
+    clean:   [{ label:'Wypakowałem/am naczynia',       icon:'🍽️', cls:'btn-success', nextState:'empty',   verb:'Wypakował(a) czyste naczynia' }],
+  };
+
+  // ── HELPERS ──────────────────────────────────────────────────────────────────
+  const todayKey = () => new Date().toISOString().slice(0, 10);
+
+  function sevenDaysAgo() {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  // ── STATE ────────────────────────────────────────────────────────────────────
+  const CONFIG_READY = !firebaseConfig.apiKey.startsWith('WKLEJ');
+  let db = null;
+  let allDays = {};  // { 'YYYY-MM-DD': { status, log: [...] } }
+
+  function getCurrentStatus() {
+    const sorted = Object.keys(allDays).sort().reverse();
+    for (const day of sorted) {
+      if (allDays[day]?.status) return allDays[day].status;
+    }
+    return 'empty';
+  }
+
+  // ── RENDER ───────────────────────────────────────────────────────────────────
+  function render() {
+    const status = getCurrentStatus();
+    const s = STATES[status];
+    const today = todayKey();
+
+    const card = document.getElementById('status-card');
+    Object.values(STATES).forEach(st => card.classList.remove(st.cls));
+    card.classList.add(s.cls);
+    document.getElementById('status-icon').textContent  = s.icon;
+    document.getElementById('status-label').textContent = s.label;
+    document.getElementById('status-desc').textContent  = s.desc;
+
+    const todayLog = (allDays[today]?.log || []).filter(Boolean);
+    const last = todayLog.length ? todayLog[todayLog.length - 1] : null;
+    document.getElementById('last-update').textContent = last
+      ? `Ostatnia zmiana: ${last.person || 'Anonim'} o ${last.time}` : '';
+
+    const actionsEl = document.getElementById('actions-card');
+    actionsEl.innerHTML = '';
+    (ACTIONS[status] || []).forEach(action => {
+      const btn = document.createElement('button');
+      btn.className = `btn ${action.cls}`;
+      btn.innerHTML = `<span>${action.icon}</span><span>${action.label}</span>`;
+      btn.addEventListener('click', () => handleAction(action));
+      actionsEl.appendChild(btn);
+    });
+
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const container = document.getElementById('history-container');
+    container.innerHTML = '';
+    const today = todayKey();
+    const days = Object.keys(allDays).sort().reverse();
+
+    if (!days.length) {
+      container.innerHTML = '<p class="log-empty">Brak historii</p>';
+      return;
+    }
+
+    days.forEach(date => {
+      const dayData = allDays[date] || {};
+      const log = (dayData.log || []).filter(Boolean);
+
+      const section = document.createElement('div');
+      section.className = 'day-section';
+
+      const header = document.createElement('div');
+      header.className = 'day-header';
+      const label = date === today ? 'Dzisiaj' : formatDate(date);
+      header.innerHTML = `<span>${label}</span><span class="day-status-badge">${STATES[dayData.status]?.icon ?? ''}</span>`;
+      section.appendChild(header);
+
+      if (!log.length) {
+        const empty = document.createElement('p');
+        empty.className = 'log-empty';
+        empty.textContent = 'Brak zdarzeń';
+        section.appendChild(empty);
+      } else {
+        const ul = document.createElement('ul');
+        ul.className = 'log-list';
+        [...log].reverse().forEach(entry => {
+          const li = document.createElement('li');
+          li.className = 'log-item';
+          const dot = STATES[entry.toState]?.dot ?? '#ccc';
+          li.innerHTML = `
+            <span class="log-dot" style="background:${dot}"></span>
+            <div>
+              <div><strong>${entry.person || 'Anonim'}</strong> — ${entry.verb}</div>
+              <div class="log-meta">${entry.time}</div>
+            </div>`;
+          ul.appendChild(li);
+        });
+        section.appendChild(ul);
+      }
+
+      container.appendChild(section);
+    });
+  }
+
+  // ── TOAST ────────────────────────────────────────────────────────────────────
+  let toastTimer = null;
+  function showToast(msg, type) {
+    let el = document.getElementById('toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.className = 'toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── ACTION ───────────────────────────────────────────────────────────────────
+  function handleAction(action) {
+    const person = document.getElementById('duty-input').value.trim();
+    const now    = new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    const today  = todayKey();
+
+    const prevLog = (allDays[today]?.log || []).filter(Boolean);
+    const newLog  = [...prevLog, { verb: action.verb, person, toState: action.nextState, time: now }];
+    const newDay  = { status: action.nextState, log: newLog };
+
+    allDays = { ...allDays, [today]: newDay };
+    render();
+
+    if (db) {
+      db.ref(`zmywarka/days/${today}`).set(newDay)
+        .then(() => showToast('✓ Zapisano w bazie', 'success'))
+        .catch(() => showToast('✗ Błąd zapisu! Sprawdź reguły Firebase.', 'error'));
+    }
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+  render(); // natychmiastowy render, zanim Firebase odpowie
+
+  if (!CONFIG_READY) {
+    document.getElementById('setup-banner').style.display = 'block';
+  } else {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+
+    document.getElementById('conn-badge').style.display = 'inline-flex';
+
+    db.ref('.info/connected').on('value', snap => {
+      const online = snap.val() === true;
+      document.getElementById('conn-dot').className = 'conn-dot ' + (online ? 'online' : 'offline');
+      document.getElementById('conn-text').textContent = online ? 'Połączono' : 'Brak połączenia';
+    });
+
+    db.ref('zmywarka/days')
+      .orderByKey()
+      .startAt(sevenDaysAgo())
+      .on('value', snap => {
+        allDays = snap.val() || {};
+        render();
+      });
+  }
+
+  // ── DUTY NAME (lokalne per urządzenie) ───────────────────────────────────────
+  const dutyInput = document.getElementById('duty-input');
+  dutyInput.value = localStorage.getItem('zmywarka_duty_name') || '';
+  dutyInput.addEventListener('input', () => {
+    localStorage.setItem('zmywarka_duty_name', dutyInput.value.trim());
+  });
+
+  document.getElementById('today-label').textContent =
+    new Date().toLocaleDateString('pl-PL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+</script>
+</body>
+</html>
